@@ -24,9 +24,9 @@ function start () {
 	fi
 	if [ $mflag -eq 0 ]
 	then
-		rclone sync --log-level INFO --log-file "$dir/$(date '+%H.%M.%S').local.log" /home/nikos/UTh "/home/nikos/TOSHIBA DRIVE/Real-Time Backup/UTh" -L
+		rclone sync --log-level NOTICE --log-file "$dir/$(date '+%H.%M.%S').local.log" /home/nikos/UTh "/home/nikos/TOSHIBA DRIVE/Real-Time Backup/UTh" -L
 	fi
-	rclone sync --log-level INFO --log-file "$dir/$(date '+%H.%M.%S').onedrive.log" "/home/nikos/TOSHIBA DRIVE/Real-Time Backup/UTh" onedrive_uth:/UTh -L
+	rclone sync --log-level NOTICE --log-file "$dir/$(date '+%H.%M.%S').onedrive.log" "/home/nikos/TOSHIBA DRIVE/Real-Time Backup/UTh" onedrive_uth:/UTh -L
 	IFS=$SAVEIFS
 }
 
