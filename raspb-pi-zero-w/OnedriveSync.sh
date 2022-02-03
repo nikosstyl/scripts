@@ -8,14 +8,23 @@
 
 function start () {
 	SAVEIFS=$IFS
+
 	IFS=$(echo -en "\n\b")
 	dir="/home/nikos/Logs/$(date '+%b')/$(date '+%d')"
 	mkdir -p "$dir"
-	# logName="$dir/$(date '+%H.%M.%S').log"
+
+	# START LOG Level
+	loglevel="NOTICE"
+	# END LOG Level
+
+	# START directories
+	source_dir="/home/nikos/UTh"
+	dest_dir="/home/nikos/TOSHIBA DRIVE/Real-Time Backup/UTh"
+	# END directories
 
 	stat=$(nbtscan 192.168.1.1-10 | grep HP-250-G7)
 	statt=$?
-	# exstat=${stat%HP-250-G7*}
+	
 	if [ $statt -ne 0 ]  
 	then
 		mflag=1
@@ -24,9 +33,10 @@ function start () {
 	fi
 	if [ $mflag -eq 0 ]
 	then
-		rclone sync --log-level NOTICE --log-file "$dir/$(date '+%H.%M.%S').local.log" /home/nikos/UTh "/home/nikos/TOSHIBA DRIVE/Real-Time Backup/UTh" -L
+		rclone sync --log-level "$loglevel" --log-file "$dir/$(date '+%H.%M.%S').local.log" "$source_dir" "$dest_dir" -L
 	fi
-	rclone sync --log-level NOTICE --log-file "$dir/$(date '+%H.%M.%S').onedrive.log" "/home/nikos/TOSHIBA DRIVE/Real-Time Backup/UTh" onedrive_uth:/UTh -L
+	rclone sync --log-level "$loglevel" --log-file "$dir/$(date '+%H.%M.%S').onedrive.log" "$dest_dir" onedrive_uth:/UTh -L
+
 	IFS=$SAVEIFS
 }
 
