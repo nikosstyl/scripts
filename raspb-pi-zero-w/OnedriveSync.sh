@@ -23,15 +23,9 @@ function start () {
 	# Device recognition
 	device_name="MyDevice"
 	ping "$device_name".local -c 5 > /dev/null 2> /dev/null
-	stat=$?
+	device_found=$?
 	
-	if [ $statt -ne 0 ]  
-	then
-		mflag=1
-	else 
-		mflag=0
-	fi
-	if [ $mflag -eq 0 ]
+	if [ $device_found -eq 0 ]
 	then
 		rclone sync --log-level "$loglevel" --log-file "$dir/$(date '+%H.%M.%S').local.log" "$source_dir" "$dest_dir" -L
 	fi
