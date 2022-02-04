@@ -13,17 +13,17 @@ function start () {
 	dir="/home/nikos/Logs/$(date '+%b')/$(date '+%d')"
 	mkdir -p "$dir"
 
-	# START LOG Level
+	# Logging level. See rclone manual for more
 	loglevel="NOTICE"
-	# END LOG Level
 
-	# START directories
+	# Set directories
 	source_dir="/home/nikos/UTh"
 	dest_dir="/home/nikos/TOSHIBA DRIVE/Real-Time Backup/UTh"
-	# END directories
 
-	stat=$(nbtscan 192.168.1.1-10 | grep HP-250-G7)
-	statt=$?
+	# Device recognition
+	device_name="MyDevice"
+	ping "$device_name".local -c 5 > /dev/null 2> /dev/null
+	stat=$?
 	
 	if [ $statt -ne 0 ]  
 	then
