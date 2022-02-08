@@ -28,16 +28,16 @@ function start () {
 	if [ $device_found -eq 0 ]
 	then
 		if [ $(pidof ngrok) ]; then
-			/home/nikos/.scripts/ngrok_start.sh kill	# Kill ngrok daemon if laptop is detected at local network
+			/home/nikos/.scripts/ngrok_service.sh kill	# Kill ngrok daemon if laptop is detected at local network
 			echo "info: running ngrok service killed" > $dir/$(date '+%H.%M.%S').ngrok.log
 		fi
 		rclone sync --log-level "$loglevel" --log-file "$dir/$(date '+%H.%M.%S').local.log" "$source_dir" "$dest_dir" -L	# Sync laptop folder with remote local backup
 		rclone sync --log-level "$loglevel" --log-file "$dir/$(date '+%H.%M.%S').onedrive.log" "$dest_dir" onedrive_uth:/UTh -L	# Sync remote local backup with Onedrive
-		else 
+		else # If device hasn't been found, start remote access service aka ngrok
 		if [ $(pidof ngrok) ]; then
-			echo "info: ngrok service already running" > "$dir/$(date '+%H.%M.%S').ngrok.log"	# If ngrok service is already running, don't run again
+			echo "info: ngrok service already running" > "$dir/$(date '+%H.%M.%S').ngrok.log"	# If ngrok service is already running, don't start it again
 			else
-			get_tcp_ip=$(/home/nikos/.scripts/ngrok_start.sh start)	# Start ngrok service and get listening TCP IP
+			get_tcp_ip=$(/home/nikos/.scripts/ngrok_service.sh start)	# Start ngrok service and get listening TCP IP
 			/home/nikos/.scripts/pushIP.sh $get_tcp_ip	# Push external IP to personal OneDrive
 			echo "info: ngrok service started running with ssh external IP $get_tcp_ip" > "$dir/$(date '+%H.%M.%S').ngrok.log"
 		fi
