@@ -17,8 +17,4 @@ if [ "$#" -ne 1 ]; then
 fi
 
 ip=$(ngrok_"$1")
-# echo TCP IP is $ip
-# sleep 15
-ngrok_kill
-
 echo $ip
