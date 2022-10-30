@@ -1,8 +1,8 @@
 ############################################
-# This script sends a message to           #
+# This script sends a message to 		   #
 # my personal Bot. It reads TOKEN and Chat #
-# ID from a json file.                     #
-# Nikos Stylianou, 2022                    #
+# ID from a json file.					   #
+# Nikos Stylianou, 2022					   #
 ############################################
 
 # Usage: python3 send_notification.py "Message to be sent" >/dev/null 2>/dev/null

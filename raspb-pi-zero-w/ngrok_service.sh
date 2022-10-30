@@ -1,7 +1,7 @@
 #/bin/bash
 
 function ngrok_start () {
-	nohup ngrok tcp 22 &> /dev/null &
+	nohup /usr/bin/ngrok tcp 22 &> /dev/null &
 	sleep 2
 	ip=$(ngrok_get_ip)
 	echo $ip

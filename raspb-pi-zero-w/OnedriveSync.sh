@@ -8,7 +8,7 @@
 
 function find_number_of_hosts () {
 	temp_file=$(mktemp)
-	nmap $ip_addr > $temp_file # Scan whole network
+	nmap "local_ip_addr" > $temp_file # Scan whole network. Remember to change this address if the network changes
 	txt=$(cat $temp_file)
 	byte_off=$(echo $txt | grep -b -o 'hosts up' | awk 'BEGIN {FS=":"}{print $1}')
 	start=$(($byte_off - 1))
@@ -71,25 +71,25 @@ function main () {
 	loglevel="INFO"
 
 	# Set directories
-	mntpoint=""	# Mountpoin folder. With this folder, I check if the folder has been mounted properly.
+	mntpoint="/path/to/mntpoint/"	# Mountpoin folder. With this folder, I check if the folder has been mounted properly.
 				# If not, a notification is sent to a smartphone using Telegram app from a simple python script.
-	source_dir=""
-	dest_dir=""
+	source_dir="/path/to/source/dir/"
+	dest_dir="/path/to/dest/dir/"
 
 	# Device recognition
-	device_name=""
+	device_name="DEVICE_NAME"
 	ping "$device_name".local -c 15 > /dev/null 2> /dev/null	# Check to see if device is on local network
 	device_found=$?
 	
 	if [ $device_found -eq 0 ]
 	then
 		if [ $(pidof ngrok) ]; then
-			ngrok_service.sh kill	# Kill ngrok daemon if laptop is detected at local network
+			/path/to/scripts/ngrok_service.sh kill	# Kill ngrok daemon if laptop is detected at local network
 			send_notification_wrapper "Ngrok connection closed!"
 			echo "info: running ngrok service killed" > $log_dir/$(date '+%H.%M.%S').ngrok.log
 		fi
 		if ! mountpoint -q -- "$source_dir"; then
-			ngrok_external_ip=$(ngrok_service.sh start)
+			ngrok_external_ip=$(/path/to/scripts/ngrok_service.sh start)
 			message="The laptop is not connected! Login to: "$message" and fix it!"
 			send_notification_wrapper "$message"
 			exit
@@ -99,15 +99,16 @@ function main () {
 		host_num=$(find_number_of_hosts)
 		if [ "$host_num" -gt "1" ];then	# If any other device is connected, host_num will be greater than 1 or else it is always 1 as it detects itself.
 			if [ $(pidof ngrok) ];then
-				ngrok_service.sh kill	# Kill ngrok daemon while other devices present (means that I'm at home).
+				/path/to/scripts/ngrok_service.sh kill	# Kill ngrok daemon while other devices present (means that I'm at home).
 				send_notification_wrapper "Ngrok connection closed!"
+				echo "info: ngrok service is not running as I am home" >"$log_dir/$(date '+%H.%M.%S').ngrok.log"
 			fi
 			exit
 		fi
 		if [ $(pidof ngrok) ]; then
 			echo "info: ngrok service already running" > "$log_dir/$(date '+%H.%M.%S').ngrok.log"	# If ngrok service is already running, don't start it again
 			else
-			ngrok_external_ip=$(ngrok_service.sh start)	# Start ngrok service and get listening TCP IP
+			ngrok_external_ip=$(/path/to/scripts/ngrok_service.sh start)	# Start ngrok service and get listening TCP IP
 			send_notification_wrapper "$ngrok_external_ip"
 			echo "info: ngrok service started running with ssh external IP $ngrok_external_ip" > "$log_dir/$(date '+%H.%M.%S').ngrok.log"
 		fi
