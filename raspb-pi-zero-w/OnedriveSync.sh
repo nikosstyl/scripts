@@ -17,13 +17,24 @@ function find_number_of_hosts () {
 	rm $temp_file
 }
 
+function send_notification_wrapper() {
+	if [ $# -ne 1 ]; then
+		exit
+	fi
+	datestamp=$(date +%H:%M:%S)
+	message=$datestamp" :  "$1
+	python send_notification.py "$message"  >/dev/null 2>/dev/null
+}
+
 function sync_local () {
 	# Local rclone function. $1 = LOG_LEVEL, $2=LOGGING_DIR, $3=SOURCE_DIR, $4=DEST_DIR
 
 	if [ $# -ne 4 ]; then
 		exit
 	fi
+	send_notification_wrapper "Starting local backup"
 	rclone sync --log-level "$1" --log-file "$2/$(date '+%H.%M.%S').local.log" "$3" "$4" -L
+	send_notification_wrapper "Finished local backup"
 }
 
 function sync_remote () {
@@ -32,7 +43,9 @@ function sync_remote () {
 	if [ $# -ne 3 ]; then
 		exit
 	fi
-	rclone sync --log-level "$1" --log-file "$2/$(date '+%H.%M.%S').onedrive.log" "$3" onedrive_uth:/UTh -L
+	send_notification_wrapper "Starting remote backup"
+	rclone sync --log-level "$1" --log-file "$2/$(date '+%H.%M.%S').onedrive.log" "$3" uth_remote:/UTh -L
+	send_notification_wrapper "Finished remote backup"
 }
 
 function sync_all () {
@@ -41,28 +54,30 @@ function sync_all () {
 	if [ $# -ne 4 ]; then
 		exit
 	fi
+	send_notification_wrapper "----------------------------------"
 	sync_local $1 $2 $3 $4
 	sync_remote $1 $2 $4
+	send_notification_wrapper "----------------------------------"
 }
 
-function start () {
+function main () {
 	SAVEIFS=$IFS
 
 	IFS=$(echo -en "\n\b")
-	log_dir="Logs/$(date '+%b')/$(date '+%d')"
+	log_dir="/path/to/Logs/$(date '+%b')/$(date '+%d')"
 	mkdir -p "$log_dir"
 
 	# Logging level. See rclone manual for more
 	loglevel="INFO"
 
 	# Set directories
-	mntpoint=	# Mountpoin folder. With this folder, I check if the folder has been mounted properly.
-				# If not, a notification is sent to a smartphone using IFTTT app from a simple python script.
-	source_dir=
-	dest_dir=
+	mntpoint=""	# Mountpoin folder. With this folder, I check if the folder has been mounted properly.
+				# If not, a notification is sent to a smartphone using Telegram app from a simple python script.
+	source_dir=""
+	dest_dir=""
 
 	# Device recognition
-	device_name=
+	device_name=""
 	ping "$device_name".local -c 15 > /dev/null 2> /dev/null	# Check to see if device is on local network
 	device_found=$?
 	
@@ -70,35 +85,35 @@ function start () {
 	then
 		if [ $(pidof ngrok) ]; then
 			ngrok_service.sh kill	# Kill ngrok daemon if laptop is detected at local network
-			pushIP.sh remove
+			send_notification_wrapper "Ngrok connection closed!"
 			echo "info: running ngrok service killed" > $log_dir/$(date '+%H.%M.%S').ngrok.log
 		fi
 		if ! mountpoint -q -- "$source_dir"; then
-			python send_notification.py $(ngrok_service.sh start)
-			pushIP.sh push $(ngrok_service.sh get_ip)
+			ngrok_external_ip=$(ngrok_service.sh start)
+			message="The laptop is not connected! Login to: "$message" and fix it!"
+			send_notification_wrapper "$message"
 			exit
 		fi
-		# rclone sync --log-level "$loglevel" --log-file "$log_dir/$(date '+%H.%M.%S').local.log" "$source_dir" "$dest_dir" -L	# Sync laptop folder with remote local backup
-		# rclone sync --log-level "$loglevel" --log-file "$log_dir/$(date '+%H.%M.%S').onedrive.log" "$dest_dir" onedrive_uth:/UTh -L	# Sync remote local backup with Onedrive
 		sync_"$1" "$loglevel" "$log_dir" "$source_dir" "$dest_dir"
 	else # If device hasn't been found, start remote access service aka ngrok unless if I'm at home, in which case I don't want to be open. ( But automate it ofc :) )
 		host_num=$(find_number_of_hosts)
 		if [ "$host_num" -gt "1" ];then	# If any other device is connected, host_num will be greater than 1 or else it is always 1 as it detects itself.
 			if [ $(pidof ngrok) ];then
 				ngrok_service.sh kill	# Kill ngrok daemon while other devices present (means that I'm at home).
+				send_notification_wrapper "Ngrok connection closed!"
 			fi
 			exit
 		fi
 		if [ $(pidof ngrok) ]; then
 			echo "info: ngrok service already running" > "$log_dir/$(date '+%H.%M.%S').ngrok.log"	# If ngrok service is already running, don't start it again
 			else
-			get_tcp_ip=$(ngrok_service.sh start)	# Start ngrok service and get listening TCP IP
-			pushIP.sh push $get_tcp_ip	# Push external IP to personal OneDrive
-			echo "info: ngrok service started running with ssh external IP $get_tcp_ip" > "$log_dir/$(date '+%H.%M.%S').ngrok.log"
+			ngrok_external_ip=$(ngrok_service.sh start)	# Start ngrok service and get listening TCP IP
+			send_notification_wrapper "$ngrok_external_ip"
+			echo "info: ngrok service started running with ssh external IP $ngrok_external_ip" > "$log_dir/$(date '+%H.%M.%S').ngrok.log"
 		fi
 	fi
 	
-	if [ "$1" = "remote" ]; then
+	if [ "$1" = "remote" ]; then # Add an exception if the laptop's not home
 		sync_"$1" "$loglevel" "$log_dir" "$dest_dir"
 	fi
 
@@ -108,8 +123,14 @@ function start () {
 if [ $(pidof rclone) ];then
 	exit
 else
-	if [ $# -ne 1 ]; then
+	if [ $# -ne 2 ]; then
+		echo "Wrong arguments!"
+		echo "Usage: $0 <all | remote | local> <directory of the scripts>"
 		exit
 	fi
-	start $1
+
+	starting_dir="$2"
+	cd "$starting_dir"
+	main $1
+	# input arguments: "local" for local sync, "remote" for syncing, "all" for both local and remote
 fi
