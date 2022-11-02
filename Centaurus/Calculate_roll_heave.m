@@ -3,31 +3,28 @@ function [ret_data] = Calculate_roll_heave(return_data)
 % Calculates roll and heave per axle.
 % Saves all calculated data to a subfolder called 'Calculated'
 
-    [fname,pname] = uigetfile('*');
-    data = readtable(strcat(pname, fname));
-    
-    front_axle = Rotary_to_length(data.DAMPER_LF_deg_, data.DAMPER_RF_deg_);
-    rear_axle = Rotary_to_length(data.DAMPER_LR_deg_, data.DAMPER_RR_deg_);
+    [fname,pname] = uigetfile('*.csv');
+    table = importdata(strcat(pname,fname));
 
-    Front_Roll = front_axle(:,1);
-    Front_Heave = front_axle(:,2);
-    Rear_Roll = rear_axle(:,1);
-    Rear_Heave = rear_axle(:,2);
+    table = array2table(table.data, "VariableNames", table.textdata(1,2:size(table.textdata,2)));
 
-    data.Front_Roll = Front_Roll;
-    data.Front_Heave = Front_Heave;
-    data.Rear_Roll = Rear_Roll;
-    data.Rear_Heave = Rear_Heave;
+    front_axle = Rotary_to_length(table.("DAMPER_LF [deg]"), table.("DAMPER_RF [deg]"));
+    rear_axle = Rotary_to_length(table.("DAMPER_LR [deg]"), table.("DAMPER_RR [deg]"));
+
+    table.("Front Roll") = front_axle(:,1);
+    table.("Front Heave") = front_axle(:,2);
+    table.("Rear Roll") = rear_axle(:,1);
+    table.("Rear Heave") = rear_axle(:,2);
 
     new_folder = strcat(pname,'Calculated/');
     if isfolder(new_folder) == false
         mkdir(new_folder)
     end
 
-    writetable(data, strcat(new_folder, fname));
+    writetable(table, strcat(new_folder, fname));
     
     if return_data == true
-        ret_data = data;
+        ret_data = table;
     else
         ret_data = 0;
     end
