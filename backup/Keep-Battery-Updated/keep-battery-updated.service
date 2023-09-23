@@ -1,0 +1,13 @@
+[Unit]
+Description=Keeps battery info updated service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=nikos
+ExecStart=/usr/local/bin/keep-battery-updated.sh
+
+[Install]
+WantedBy=multi-user.target
