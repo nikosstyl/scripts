@@ -4,7 +4,7 @@
 # @script       keep-battery-updated
 # @description  keeps the battery status updated
 #
-##
+# User has to install acpi package
 
 DIR="/usr/local/bin/"
 
@@ -26,6 +26,7 @@ while sleep 10; do
     goodbattery=$(acpi -V | grep Battery | sed -n 1p | cut -d ':' -f 2 | cut -d ',' -f 1 | xargs)
 
     if [ $badbattery != $goodbattery ]; then
+        tlp start
         python3 $DIR/keep-battery-updated.py
     fi
 done
