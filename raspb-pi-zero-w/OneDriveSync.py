@@ -48,6 +48,23 @@ class LogFileClass:
 		logging.shutdown()
 		self.FileHandler.close()
 
+def delete_old_subfolders_recursive(base_path):
+    current_time = datetime.now()
+
+    for root, dirs, files in os.walk(base_path, topdown=False):
+        for folder_name in dirs:
+            folder_path = os.path.join(root, folder_name)
+
+            folder_time = datetime.fromtimestamp(os.path.getmtime(folder_path))
+            age = current_time - folder_time
+
+            if age > timedelta(days=7):
+                try:
+                    shutil.rmtree(folder_path)
+                    # print(f"Deleted subfolder: {folder_path}")
+                except Exception as e:
+                    # print(f"Error deleting subfolder {folder_path}: {e}")
+                    logging.warn(f"There was exception while deleteting the folder {folder_path}!\n\t\tReason: {e}")
 
 def checkIfDiskMounted():
 	return os.path.isdir(LOCAL_DEST_DIR)
@@ -109,6 +126,7 @@ def main():
 
 
 	LogFile.close()
+	delete_old_subfolders_recursive(LOG_DIR_PATH)
 	sys.exit(0)
 
 if __name__ == "__main__":
