@@ -1,0 +1,5 @@
+{
+  "passives"   : ["res", "cap", "ind", "diode"],
+  "transistors": ["npn", "pnp", "nmos", "pmos"],
+  "misc"       : ["opamp"]
+}
