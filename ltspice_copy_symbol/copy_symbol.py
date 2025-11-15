@@ -4,17 +4,29 @@ LTSPICE_DEFAULT_SYMBOL_FOLDER = os.getenv('LOCALAPPDATA')+"/LTspice/lib/sym/"
 
 CONFIG_FILE = "config.json"
 ACCEPTED_COMPONENTS = []
+FILE_POSITIONS = []
 
-def read_accepted_components(configuration_file:str) -> list : 
-	ret_list = []
+def read_accepted_components(configuration_file:str) -> tuple[list,list]:
+	ret_element_list = []
+	ret_file_list = []
 	with open(configuration_file) as f:
 		d = dict(json.load(f))
 	for category in d.keys():
 		for element in d[category]:
-			ret_list.append(str(element).lower())
-	return(ret_list)
+			ret_element_list.append(element[0].lower())
+			ret_file_list.append(element[1])
+	return(ret_element_list, ret_file_list)
 
-ACCEPTED_COMPONENTS = read_accepted_components(CONFIG_FILE)
+ACCEPTED_COMPONENTS, FILE_POSITIONS = read_accepted_components(CONFIG_FILE)
+
+error_found = False
+for i, comp in enumerate(FILE_POSITIONS):
+	if not os.path.isfile(LTSPICE_DEFAULT_SYMBOL_FOLDER+comp):
+		print(f"Component \"{ACCEPTED_COMPONENTS[i]}\" with filename \"{comp}\" is missing from the default LTspice symbol folder \"{LTSPICE_DEFAULT_SYMBOL_FOLDER}\"!")
+		error_found = True
+
+if error_found:
+	exit(4)
 
 parser = argparse.ArgumentParser(description="Simple script that copies a default LTspice symbol to a custom-made one.")
 parser.add_argument('-c', '--component', help=f"Set the correct component to copy. Acceptable components are: {ACCEPTED_COMPONENTS}")
@@ -36,10 +48,7 @@ if component not in ACCEPTED_COMPONENTS:
     print(f"Accepted components: {ACCEPTED_COMPONENTS}")
     exit(2)
 
-if component == "opamp":
-    component_filename = LTSPICE_DEFAULT_SYMBOL_FOLDER+"OpAmps/UniversalOpAmp.asy"
-else:
-    component_filename = LTSPICE_DEFAULT_SYMBOL_FOLDER+component+".asy"
+component_filename = LTSPICE_DEFAULT_SYMBOL_FOLDER + FILE_POSITIONS[ACCEPTED_COMPONENTS.index(component)]
 
 component_lines = []
 try:
@@ -56,4 +65,5 @@ try:
         for line in component_lines:
             file.write(line)
 except FileNotFoundError:
-    print(f"Target file {target_file} cannot be found!")
+	print(f"Target file {target_file} cannot be found!")
+	exit(5)
