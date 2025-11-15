@@ -1,5 +1,5 @@
 {
-  "passives"   : ["res", "cap", "ind", "diode"],
-  "transistors": ["npn", "pnp", "nmos", "pmos"],
-  "misc"       : ["opamp"]
+  "passives"   : [["res", "res.asy"], ["cap", "cap.asy"], ["ind", "ind.asy"], ["diode", "diode.asy"]],
+  "transistors": [["npn", "npn.asy"], ["pnp", "pnp.asy"], ["nmos", "nmos.asy"], ["pmos", "pmos.asy"]],
+  "misc"       : [["opamp", "OpAmps/UniversalOpAmp.asy"]]
 }
