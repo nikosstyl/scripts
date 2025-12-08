@@ -1,5 +1,5 @@
 import re, os, argparse
-from copy_symbol import read_accepted_components, CONFIG_FILE
+from copy_symbol import read_accepted_components, CONFIG_FILE, copy_symbol_main
 
 MODEL_LINES = ["SymbolType BLOCK", "SYMATTR Prefix X"]
 
@@ -26,6 +26,8 @@ def check_arguments(parser: argparse.ArgumentParser) -> tuple[str,str]:
 	return(component, lib_file)
 
 ACCEPTED_COMPONENTS, FILE_POSITIONS = read_accepted_components(CONFIG_FILE)
+if (ACCEPTED_COMPONENTS is None) or (FILE_POSITIONS is None):
+    exit(2)
 
 Parser = argparse.ArgumentParser(description="Generate LTspice symbol from SPICE model")
 Parser.add_argument('-c', '--component', help=f"Set the correct component to copy. Acceptable components are: {ACCEPTED_COMPONENTS}")
@@ -68,10 +70,14 @@ i+=1
 MODEL_LINES.append(f"WINDOW 3 {96+i*48} 0 Bottom 2")
 MODEL_LINES.append(f"SYMATTR ModelFile Libs/{lib_file}")
 
-if os.path.isfile(lib_path+modelName+".asy"):
-	print(f"File {lib_path+modelName+'.asy'} already exists! Exiting...")
+target_symbol_file = lib_path+modelName+".asy"
+
+if os.path.isfile(target_symbol_file):
+	print(f"File {target_symbol_file} already exists! Exiting...")
 	exit(2)
 
-with open(lib_path+modelName+".asy", "w") as f:
+with open(target_symbol_file, "w") as f:
 	for line in MODEL_LINES:
 		f.write(line+"\n")
+
+copy_symbol_main(component, target_symbol_file)
