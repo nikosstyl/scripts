@@ -21,6 +21,8 @@ def read_accepted_components(configuration_file:str) -> tuple[list,list]:
 			ret_file_list.append(element[1])
 	return(ret_element_list, ret_file_list)
 
+ACCEPTED_COMPONENTS, FILE_POSITIONS = read_accepted_components(CONFIG_FILE)
+
 def check_arguments(parser: argparse.ArgumentParser) -> tuple[str,str]:
 	args = parser.parse_args()
 
@@ -42,8 +44,6 @@ def check_arguments(parser: argparse.ArgumentParser) -> tuple[str,str]:
 		print(f"Target file \"{target_file}\" does not exist!")
 		exit(5)
 	return(component, target_file)
-
-ACCEPTED_COMPONENTS, FILE_POSITIONS = read_accepted_components(CONFIG_FILE)
 
 def main():
 	error_found = False
