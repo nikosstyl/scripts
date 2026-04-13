@@ -1,15 +1,7 @@
-import os, time
+import os, time, psutil, yaml
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
-import psutil
 
-token = os.environ.get('INFLUXDB_TOKEN') # Must be given in the systemd
-org = "Testing"
-host = "https://eu-central-1-1.aws.cloud2.influxdata.com"
-client = InfluxDBClient(url=host, token=token, org=org)
-write_api = client.write_api(write_options=SYNCHRONOUS)
-
-influxBucket="rpiData"
 
 def get_wifi_signal():
     with open("/proc/net/wireless", "r") as f:
@@ -35,15 +27,25 @@ def get_system_metrics():
         "wifi_quality": get_wifi_signal()[1],
     }
 
+with open("telemetry_cfg.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
+token = os.environ.get('INFLUXDB_TOKEN') # Must be given in the systemd
+org = config["InfluxDB"]["org"]
+host = config["InfluxDB"]["host"]
+influxBucket = config["InfluxDB"]["bucket"]
+pointName = config["InfluxDB"]["point_name"]
+client = InfluxDBClient(url=host, token=token, org=org)
+write_api = client.write_api(write_options=SYNCHRONOUS)
+
 while True:
     metrics = get_system_metrics()
 
-    point = Point("rasbpi")
+    point = Point(pointName)
     for key,value in metrics.items():
         point.field(key, value)
     write_api.write(bucket=influxBucket, record=point)
 
     time.sleep(5)
-    # print(f"\033[2K\rCPU Temp: {cpu_temp_c}°C, CPU Util: {cpu_util}%, CPU Freq: {cpu_freq}, Uptime: {get_uptime()}", end='')
 print()
 exit()

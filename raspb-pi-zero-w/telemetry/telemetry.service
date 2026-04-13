@@ -8,6 +8,7 @@ Type=simple
 Restart=always
 RestartSec=10
 User=nikos
+WorkingDirectory=/usr/local/bin/
 ExecStart=/usr/bin/env python /usr/local/bin/telemetry.py
 Environment="INFLUXDB_TOKEN="
 
