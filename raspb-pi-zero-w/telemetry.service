@@ -1,0 +1,15 @@
+[Unit]
+Description=Grafana Telemetry Overview of this Raspberry Pi 0W
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+User=nikos
+ExecStart=/usr/bin/env python /usr/local/bin/telemetry.py
+Environment="INFLUXDB_TOKEN="
+
+[Install]
+WantedBy=multi-user.target

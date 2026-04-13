@@ -1,39 +1,49 @@
 import os, time
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
-import psutil, subprocess
+import psutil
 
-run_check = ["tailscale", "status"]
-TAILSCALE_STOP_STR = "Tailscale is stopped."
-
-def check_tailscale_up() -> int:
-    result = subprocess.run(run_check, stdout=subprocess.PIPE)
-    result_str = result.stdout.decode("utf-8")
-
-    if TAILSCALE_STOP_STR in result_str:
-        return 0
-    return 1
-
-
-token = os.environ.get('INFLUXDB_TOKEN')
+token = os.environ.get('INFLUXDB_TOKEN') # Must be given in the systemd
 org = "Testing"
 host = "https://eu-central-1-1.aws.cloud2.influxdata.com"
 client = InfluxDBClient(url=host, token=token, org=org)
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
-database="RaspberryPi Data"
+influxBucket="rpiData"
+
+def get_wifi_signal():
+    with open("/proc/net/wireless", "r") as f:
+        lines = f.readlines()
+        if len(lines) > 2:
+            return [int(lines[2].split()[3].replace('.', '')), int(lines[2].split()[2].replace('.', ''))]
+            # returns -db and link quality
+    return 0
+
+
+def get_system_metrics():
+    with open('/proc/uptime', 'r') as f:
+        uptime_seconds = float(f.readline().split()[0])
+
+    return {
+        "temp": psutil.sensors_temperatures()['cpu_thermal'][0][1],
+        "util": psutil.cpu_percent(),
+        "freq": float(psutil.cpu_freq()[0]),
+        "ram": psutil.virtual_memory()[2],
+        "uptime": int(uptime_seconds),
+        "avg_load_1m": os.getloadavg()[0],
+        "wifi_db": get_wifi_signal()[0],
+        "wifi_quality": get_wifi_signal()[1],
+    }
 
 while True:
-    cpu_temp_c = psutil.sensors_temperatures()['cpu_thermal'][0][1]
-    cpu_util = psutil.cpu_percent()
-    cpu_freq = float(psutil.cpu_freq()[0])
-    free_mem = psutil.virtual_memory()[2]
-    tailscale_up = check_tailscale_up()
+    metrics = get_system_metrics()
 
-    point = Point("rasbpi").field("temp",cpu_temp_c).field("util",cpu_util).field("freq",cpu_freq).field("ram", free_mem).field("tailscale_up", tailscale_up)
-    write_api.write(bucket=database, record=point)
+    point = Point("rasbpi")
+    for key,value in metrics.items():
+        point.field(key, value)
+    write_api.write(bucket=influxBucket, record=point)
 
-    time.sleep(1.3)
-    # print(f"CPU Temp: {cpu_temp_c}°C, CPU Util: {cpu_util}%, CPU Freq: {cpu_freq}", end='\r')
+    time.sleep(5)
+    # print(f"\033[2K\rCPU Temp: {cpu_temp_c}°C, CPU Util: {cpu_util}%, CPU Freq: {cpu_freq}, Uptime: {get_uptime()}", end='')
 print()
 exit()
