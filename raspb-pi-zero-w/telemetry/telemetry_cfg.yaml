@@ -1,0 +1,5 @@
+InfluxDB:
+  org: "Testing"
+  host: "https://eu-central-1-1.aws.cloud2.influxdata.com"
+  bucket: "rpiData"
+  point_name: "rasbpi"
