@@ -19,24 +19,34 @@ def run_dbus_method(bus_type, obj, path, interface, method, arg):
 
 
 def find_battery_path():
-    call = ['system', 'org.freedesktop.UPower',
-            '/org/freedesktop/UPower', 'org.freedesktop.UPower',
-            'EnumerateDevices', None]
+    call = [
+        "system",
+        "org.freedesktop.UPower",
+        "/org/freedesktop/UPower",
+        "org.freedesktop.UPower",
+        "EnumerateDevices",
+        None,
+    ]
     devices = run_dbus_method(*call)
     for i in devices:
-        if 'BAT' in i:
+        if "BAT" in i:
             return str(i)
     return None
 
 
 def main():
     bat_path = find_battery_path()
-    call = ['system', 'org.freedesktop.UPower',
-            bat_path, 'org.freedesktop.UPower.Device',
-            'Refresh', None]
+    call = [
+        "system",
+        "org.freedesktop.UPower",
+        bat_path,
+        "org.freedesktop.UPower.Device",
+        "Refresh",
+        None,
+    ]
 
     run_dbus_method(*call)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
