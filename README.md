@@ -1,6 +1,8 @@
 # My scripts
 
-[![Build Status](https://github.com/nikosstyl/scripts/actions/workflows/check.yml/badge.svg)](https://github.com/nikosstyl/scripts/actions)
+## Build Status
+
+![Build Status](https://github.com/nikosstyl/scripts/actions/workflows/check_python_linting.yaml/badge.svg)
 
 This project contains all the scripts I've written througout the years.
 
