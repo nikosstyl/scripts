@@ -1,8 +1,10 @@
 # My scripts
 
-## Build Status
+## Linting Status
 
 ![Build Status](https://github.com/nikosstyl/scripts/actions/workflows/check_python_linting.yaml/badge.svg)
+
+All Python code that's uploaded in this repository must be linted with the ruff.
 
 This project contains all the scripts I've written througout the years.
 
